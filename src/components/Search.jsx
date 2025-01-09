@@ -1,8 +1,6 @@
-import React, { useState } from 'react'
+import React  from "react";
 
-const Search = () => {
-    const [query, setQuery] = useState("");
-
+const Search = ({ query, setQuery }) => {
   return (
     <input
       className="search"
@@ -11,7 +9,7 @@ const Search = () => {
       value={query}
       onChange={(e) => setQuery(e.target.value)}
     />
-  )
-}
+  );
+};
 
-export default Search
+export default Search;

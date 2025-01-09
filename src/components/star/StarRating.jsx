@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Star from "./Star";
- 
+
 const StarRating = ({
   maxLength = 10,
   size = 48,
