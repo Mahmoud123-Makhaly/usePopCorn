@@ -1,14 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Loader from "./Loader";
 import StarRating from "./star/StarRating";
+import { useKey } from "../hooks/useKey";
 
 const KEY = "f84fc31d";
 const MovieDetails = ({ selectedId, onClose, onAddToWatchedList, watched }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [movie, setMovie] = useState({});
   const [rating, setRating] = useState("");
+  const countRef = useRef(0);
+ useKey("Escape" , onClose)
+  useEffect(() => {
+    if (rating) countRef.current++;
+  }, [rating]);
   const isWatched = watched.map((prev) => prev.imdbID).includes(selectedId);
- 
+  const watchedRatedMovie = watched.find(
+    (movie) => movie.imdbID === selectedId
+  )?.userRating;
   const {
     Director: director,
     Genre: genre,
@@ -46,11 +54,32 @@ const MovieDetails = ({ selectedId, onClose, onAddToWatchedList, watched }) => {
       userRating: rating,
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split("")[0]),
+      count: countRef.current,
     };
 
     onAddToWatchedList(newItem);
     onClose();
   };
+  useEffect(() => {
+    if (!title) return;
+    document.title = `Movie | ${title}`;
+    return () => {
+      document.title = "usePopCorn";
+      console.log(`${title} from cleanupFunction`);
+    };
+  }, [title]);
+  // useEffect(() => {
+  //   const callback = function (e) {
+  //     if (e.code === "Escape") {
+  //       onClose();
+  //     }
+  //   };
+  //   document.addEventListener("keydown", callback);
+
+  //   return () => {
+  //     document.removeEventListener("keydown", callback);
+  //   };
+  // }, [onClose]);
 
   return (
     <div className="details">
@@ -77,15 +106,23 @@ const MovieDetails = ({ selectedId, onClose, onAddToWatchedList, watched }) => {
           </header>
           <section>
             <div className="rating">
-            
-                              {
-                                  !isWatched ?     <StarRating maxLength={10} size={24} onSetRating={setRating} />
-              {rating && (
-                <button className="btn-add" onClick={handleAddToList}>
-                  Add To List
-                </button>
-              )}: <p>you have been rating this film </p>
-          }
+              {!isWatched ? (
+                <>
+                  {" "}
+                  <StarRating
+                    maxLength={10}
+                    size={24}
+                    onSetRating={setRating}
+                  />
+                  {rating > 0 && (
+                    <button className="btn-add" onClick={handleAddToList}>
+                      Add To List
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p>you have been rated this movie {watchedRatedMovie} </p>
+              )}
             </div>
             <p>
               <em>{plot}</em>

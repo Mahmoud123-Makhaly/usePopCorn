@@ -11,6 +11,8 @@ import Box from "./components/Box";
 import Loader from "./components/Loader";
 import ErrorMessage from "./components/ErrorMessage";
 import MovieDetails from "./components/MovieDetails";
+import { useMovie } from "./hooks/useMovie";
+import useLocaleStorage from "./hooks/useLocaleStorage";
 
 const tempMovieData = [
   {
@@ -58,44 +60,16 @@ const tempWatchedData = [
     userRating: 9,
   },
 ];
-const KEY = "f84fc31d";
 export default function Appv1() {
-  const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState("");
+  // const [watched, setWatched] = useState(function () {
+  //   const storedData = localStorage.getItem("watched");
+  //   return JSON.parse(storedData);
+  // });
+
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      setIsError("");
-      const res = await fetch(
-        `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
-      );
-      if (!res.ok) {
-        throw new Error("Some Thing Went Wrong");
-      }
-      const data = await res.json();
-      if (data.Response === "False") throw new Error("Failed to Fetch data");
-      setMovies(data.Search);
-      setIsLoading(false);
-    } catch (err) {
-      setIsError(err.message);
-    } finally {
-      setIsLoading(false);
-      setIsError("");
-    }
-  };
-  useEffect(() => {
-    if (!query.length) {
-      setMovies([]);
-      setIsError("");
-      return;
-    }
-    fetchData();
-  }, [query]);
+  const { isError, isLoading, movies } = useMovie(query);
+  const [watched, setWatched] = useLocaleStorage([], "watched");
   const handleSelectMovie = (id) => {
     setSelectedId((prev) => (prev === id ? null : id));
   };
@@ -107,12 +81,19 @@ export default function Appv1() {
     setWatched((prev) => [...prev, movie]);
   };
 
+  const handleDeleteWatchedItem = (id) => {
+    setWatched((prev) => prev.filter((movie) => movie.imdbID !== id));
+  };
+  // useEffect(() => {
+  //   localStorage.setItem("watched", JSON.stringify(watched));
+  // }, [watched]);
   return (
     <>
       <Navbar>
         <Search setQuery={setQuery} query={query} />
         <NumResult movies={movies} />
       </Navbar>
+
       <ListBox>
         <Box>
           {isLoading && <Loader />}
@@ -133,7 +114,10 @@ export default function Appv1() {
             <>
               {" "}
               <WatchedSummary watched={watched} />
-              <WatchedList watched={watched} />
+              <WatchedList
+                watched={watched}
+                onDelete={handleDeleteWatchedItem}
+              />
             </>
           )}
         </Box>
