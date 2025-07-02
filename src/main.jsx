@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-// import "./index.css";
+import "./index.css";
 import "./index2.css";
 import App from "./App.jsx";
 import StarRating from "./components/star/StarRating.jsx";
@@ -9,7 +9,7 @@ import TextExpander from "./components/text-expander/TextExpander.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    {/* <App /> */}
+    <App />
     {/* <StarRating maxRating={10} />
     <StarRating
       maxRating={5}
@@ -20,7 +20,7 @@ createRoot(document.getElementById("root")).render(
       defaultRating={3}
     />
     <Test /> */}
-    <TextExpander
+    {/* <TextExpander
       isOpen={false}
       color="blue"
       collapseText="Show  less"
@@ -45,6 +45,6 @@ createRoot(document.getElementById("root")).render(
       organizations. And while it's not always easy (or cheap), the results are
       out of this world. Think about the first time humans stepped foot on the
       moon or when rovers were sent to roam around on Mars
-    </TextExpander>
+    </TextExpander> */}
   </StrictMode>
 );
