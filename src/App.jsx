@@ -10,6 +10,7 @@ import Box from "./components/Box";
 import Main from "./components/Main";
 import Loader from "./components/Loader";
 import ErrorMsg from "./components/ErrorMsg";
+import MovieDetails from "./components/MovieDetails";
 const API_KEY = "f84fc31d";
 const tempMovieData = [
   {
@@ -63,44 +64,93 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const query = "interstellar";
-  const getMovies = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(
-        `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
-      );
-      if (!res.ok) throw new Error("Something went wrong when fetching movies");
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
 
-      const data = await res.json();
-      setMovies(data.Search);
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   useEffect(() => {
+    const controller = new AbortController();
+    async function getMovies() {
+      try {
+        setIsLoading(true);
+        setError("");
+        const res = await fetch(
+          `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`,
+          {
+            signal: controller.signal,
+          }
+        );
+        if (!res.ok)
+          throw new Error("Something went wrong when fetching movies");
+
+        const data = await res.json();
+        setMovies(data.Search);
+
+        setError("");
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setError(error.message);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    if (query.length < 3) {
+      setError("");
+      setMovies([]);
+      return;
+    }
+    handleCloseMovie();
     getMovies();
-  }, []);
+    return () => {
+      controller.abort();
+    };
+  }, [query]);
+  const handleCloseMovie = () => {
+    setSelectedId(null);
+  };
+  const handleSelectMovie = (id) => {
+    setSelectedId((prev) => (prev === id ? null : id));
+  };
+
+  const handleAddMovie = (movie) => {
+    setWatched((prev) => [...prev, movie]);
+  };
+  const handleDeleteMovie = (id) => {
+    setWatched((prev) => prev.filter((movie) => movie.imdbID !== id));
+  };
   return (
     <>
       <Navbar>
         <Logo />
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResult movies={movies} />
       </Navbar>
 
       <Main>
         <Box>
-          {!isLoading && !error && <MovieList movies={movies} />}
+          {!isLoading && !error && (
+            <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
+          )}
           {isLoading && <Loader />}
           {error && <ErrorMsg message={error} />}
         </Box>
         <Box>
-          <Summary watched={watched} />
-
-          <WatchedList watched={watched} />
+          {selectedId ? (
+            <MovieDetails
+              selectedId={selectedId}
+              onCloseMovie={handleCloseMovie}
+              onAddMovie={handleAddMovie}
+              watched={watched}
+            />
+          ) : (
+            <>
+              <Summary watched={watched} />
+              <WatchedList
+                watched={watched}
+                onDeleteMovie={handleDeleteMovie}
+              />
+            </>
+          )}
         </Box>
       </Main>
     </>
